@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app_network
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgres://admin:adminpassword@db:5432/mydatabase
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    networks:
+      - app_network
+    command: >
+      bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
